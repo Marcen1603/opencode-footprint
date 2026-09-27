@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Bun
+.bun/
+
+# Footprint-Daten aus lokalen Testläufen (nicht das npm-Package selbst)
+.opencode/footprint/
+*.footprint.jsonl
+
+# Env / Secrets
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Coverage
+coverage/
