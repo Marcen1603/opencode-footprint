@@ -36,3 +36,17 @@ describe("schema", () => {
     expect(parseJsonl(content)).toHaveLength(2)
   })
 })
+
+describe("tool events", () => {
+  test("tool entries survive a round trip", () => {
+    const e = createEvent({
+      kind: "tool",
+      name: "confluence_search",
+      category: "external",
+      sessionID: "ses_1",
+      source: "plugin",
+      confidence: "hook",
+    })
+    expect(parseLine(serialize(e))).toEqual(e)
+  })
+})

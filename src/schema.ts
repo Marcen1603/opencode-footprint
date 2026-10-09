@@ -70,12 +70,28 @@ export interface NetworkEvent extends BaseEvent {
   /** Host or URL */
   target: string
   /** How was the access detected? */
-  via: "bash-heuristic" | "proxy"
+  via: "bash-heuristic" | "tool" | "proxy"
   /** Triggering command for heuristic detection */
   command?: string
 }
 
-export type FootprintEvent = SessionEvent | FileEvent | CommandEvent | NetworkEvent
+/**
+ * Any other tool call (glob, grep, subagent, MCP and plugin tools, ...). Only the tool name is
+ * stored, never its input, which may contain secrets or private content.
+ */
+export interface ToolEvent extends BaseEvent {
+  kind: "tool"
+  /** Tool name as reported by OpenCode, e.g. "grep" or "confluence_search". */
+  name: string
+  /**
+   * builtin:  one of OpenCode's built-in tools
+   * external: anything else (MCP server, plugin or unknown); MCP tools usually carry the
+   *           server name as a prefix. The origin cannot be told apart reliably.
+   */
+  category: "builtin" | "external"
+}
+
+export type FootprintEvent = SessionEvent | FileEvent | CommandEvent | NetworkEvent | ToolEvent
 export type FootprintKind = FootprintEvent["kind"]
 
 /** Payload without the metadata set by `createEvent`. */
@@ -94,7 +110,13 @@ export function serialize(event: FootprintEvent): string {
   return `${JSON.stringify(event)}\n`
 }
 
-const KINDS: ReadonlySet<string> = new Set<FootprintKind>(["session", "file", "command", "network"])
+const KINDS: ReadonlySet<string> = new Set<FootprintKind>([
+  "session",
+  "file",
+  "command",
+  "network",
+  "tool",
+])
 
 export function isFootprintEvent(value: unknown): value is FootprintEvent {
   if (typeof value !== "object" || value === null) return false

@@ -68,6 +68,7 @@ async function main(argv: string[]): Promise<number> {
       console.log(`  Files:     ${counts.file}`)
       console.log(`  Commands:  ${counts.command}`)
       console.log(`  Network:   ${counts.network}`)
+      console.log(`  Tools:     ${counts.tool}`)
       // TODO(v1): readable summary instead of counters
       return 0
     }
