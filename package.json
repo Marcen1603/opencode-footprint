@@ -1,0 +1,64 @@
+{
+  "name": "opencode-footprint",
+  "version": "0.0.0",
+  "description": "A lightweight, readable footprint of what your OpenCode agent actually did — files touched, commands run, network access.",
+  "license": "MIT",
+  "author": "Marcen1603",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marcen1603/opencode-footprint.git"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "ai-agent",
+    "coding-agent",
+    "observability",
+    "session-tracking",
+    "cli",
+    "tui"
+  ],
+  "type": "module",
+  "packageManager": "bun@1.4.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/plugin.d.ts",
+      "import": "./dist/plugin.js"
+    },
+    "./tui": {
+      "types": "./dist/tui.d.ts",
+      "import": "./dist/tui.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js"
+    }
+  },
+  "bin": {
+    "opencode-footprint": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "bun test",
+    "prepublishOnly": "bun run typecheck && bun test && bun run build"
+  },
+  "peerDependencies": {
+    "@opencode/plugin": ">=2.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@opencode/plugin": "2.0.26",
+    "@types/bun": "1.4.2",
+    "@types/node": "^24.0.0",
+    "typescript": "^7.0.2"
+  }
+}

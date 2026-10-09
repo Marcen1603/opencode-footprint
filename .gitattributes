@@ -1,0 +1,6 @@
+# Einheitliche LF-Zeilenenden (Windows-Checkouts sonst CRLF → Biome/CI-Diffs)
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
