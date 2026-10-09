@@ -1,8 +1,8 @@
 /**
- * Server-Plugin (Lite-Edition): hört auf OpenCode-Hooks/-Events und schreibt den Footprint.
- * Eingebunden über opencode.json → "plugins": ["opencode-footprint"].
+ * Server plugin (lite edition): listens to OpenCode hooks/events and writes the footprint.
+ * Enabled via opencode.json → "plugins": ["opencode-footprint"].
  *
- * Zielplattform: OpenCode V2 (`@opencode/plugin` 2.x). V1-Plugins laufen auf V2 nicht.
+ * Target platform: OpenCode V2 (`@opencode/plugin` 2.x). V1 plugins do not run on V2.
  */
 import { Plugin } from "@opencode/plugin"
 import { createEvent, type EventInput, RUN_ID_ENV } from "./schema.js"
@@ -20,7 +20,7 @@ export default Plugin.define({
       try {
         await appendEvent(directory, createEvent(runID ? { ...input, runID } : input))
       } catch (error) {
-        // Der Footprint darf die Agent-Session niemals stören.
+        // The footprint must never disturb the agent session.
         console.error(`[${PLUGIN_ID}] failed to write event`, error)
       }
     }
@@ -57,8 +57,8 @@ export default Plugin.define({
       if (!abort.signal.aborted) console.error(`[${PLUGIN_ID}] event stream failed`, error)
     })
 
-    // TODO(v1): ctx.tool.hook("execute.before" | "execute.after") → bash (Commands + Netzwerk-Heuristik),
-    //           read/edit/write (Dateien). Beide Hooks tragen sessionID; file.edited nicht.
+    // TODO(v1): ctx.tool.hook("execute.before" | "execute.after") → bash (commands + network heuristic),
+    //           read/edit/write (files). Both hooks carry a sessionID; file.edited does not.
 
     return () => abort.abort()
   },

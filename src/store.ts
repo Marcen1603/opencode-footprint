@@ -1,12 +1,12 @@
 /**
- * Ablage der Footprint-Dateien: eine JSONL-Datei pro Session.
- * Wird von allen Schreibern und Lesern gemeinsam genutzt, damit Pfade nie auseinanderlaufen.
+ * Storage of footprint files: one JSONL file per session.
+ * Shared by all writers and readers so that paths never diverge.
  */
 import { appendFile, mkdir, readdir, readFile, stat } from "node:fs/promises"
 import { join } from "node:path"
 import { type FootprintEvent, parseJsonl, serialize } from "./schema.js"
 
-/** Relativ zum Projektverzeichnis (siehe .gitignore). */
+/** Relative to the project directory (see .gitignore). */
 export const FOOTPRINT_DIR = join(".opencode", "footprint")
 export const FILE_SUFFIX = ".footprint.jsonl"
 
@@ -14,7 +14,7 @@ export function footprintDir(projectDir: string): string {
   return join(projectDir, FOOTPRINT_DIR)
 }
 
-/** Session-IDs landen im Dateinamen – alles außer [A-Za-z0-9_-] wird ersetzt. */
+/** Session IDs end up in file names – everything except [A-Za-z0-9_-] is replaced. */
 export function safeId(id: string): string {
   const cleaned = id.replace(/[^A-Za-z0-9_-]/g, "_")
   if (cleaned === "") throw new Error("empty session id")
@@ -42,7 +42,7 @@ export async function readSession(
   }
 }
 
-/** Alle bekannten Session-IDs eines Projekts, älteste zuerst (nach letzter Änderung). */
+/** All known session IDs of a project, oldest first (by last modification). */
 export async function listSessions(projectDir: string): Promise<string[]> {
   const dir = footprintDir(projectDir)
   try {

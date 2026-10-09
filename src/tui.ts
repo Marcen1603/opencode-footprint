@@ -1,10 +1,10 @@
 /**
- * TUI-Plugin: Live-Ansicht des Footprints während der Session.
- * Wird von OpenCode V2 über den Subpath-Export "./tui" dieses Pakets geladen
- * (zusammen mit dem Server-Plugin aus opencode.json → "plugins").
+ * TUI plugin: live view of the footprint during the session.
+ * Loaded by OpenCode V2 through this package's "./tui" subpath export
+ * (together with the server plugin from opencode.json → "plugins").
  *
- * Noch ein Platzhalter. Geplant: Slot "sidebar.content" (pro sessionID) mit Zusammenfassung;
- * Datenquelle: context.data.on(...) bzw. context.data.listen(...) für Live-Events.
+ * Still a placeholder. Planned: slot "sidebar.content" (per sessionID) with a summary;
+ * data source: context.data.on(...) / context.data.listen(...) for live events.
  */
 import { Plugin } from "@opencode/plugin/tui"
 
@@ -13,6 +13,6 @@ export const PLUGIN_ID = "opencode-footprint"
 export default Plugin.define({
   id: PLUGIN_ID,
   setup() {
-    // TODO(v1): context.ui.slot({ append: "sidebar.content", render: … }) registrieren
+    // TODO(v1): register context.ui.slot({ append: "sidebar.content", render: … })
   },
 })

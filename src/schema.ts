@@ -1,42 +1,42 @@
 /**
- * Gemeinsames Footprint-Event-Format.
+ * Shared footprint event format.
  *
- * Diese Datei ist der Vertrag zwischen allen Schreibern (Server-Plugin, später Capsule-Wrapper)
- * und allen Lesern (TUI, CLI-Report). Jede Änderung hier ist eine Format-Änderung:
- * bei inkompatiblen Änderungen SCHEMA_VERSION erhöhen.
+ * This file is the contract between all writers (server plugin, later the capsule wrapper)
+ * and all readers (TUI, CLI report). Every change here is a format change:
+ * bump SCHEMA_VERSION on incompatible changes.
  *
- * Bewusst ohne Laufzeit-Abhängigkeiten (kein zod o. ä.), damit CLI und Wrapper schlank bleiben.
+ * Deliberately free of runtime dependencies (no zod or similar) to keep the CLI and wrapper lean.
  */
 
 export const SCHEMA_VERSION = 1 as const
 
 /**
- * Vom Capsule-Wrapper beim Starten von OpenCode gesetzt; das Plugin liest sie aus,
- * damit beide Quellen demselben Lauf zugeordnet werden können.
+ * Set by the capsule wrapper when it starts OpenCode; the plugin reads it
+ * so that both sources can be attributed to the same run.
  */
 export const RUN_ID_ENV = "OPENCODE_FOOTPRINT_RUN_ID"
 
 /**
- * Wie zuverlässig ist ein Eintrag?
- * - hook:     direkt aus einem OpenCode-Hook/Event gemeldet
- * - inferred: abgeleitet/heuristisch (z. B. Netzwerkzugriff aus einem Bash-Befehl geparst)
- * - observed: unabhängig von OpenCode beobachtet (Capsule: Prozessbaum, FS-Watcher, Proxy)
+ * How reliable is an entry?
+ * - hook:     reported directly by an OpenCode hook/event
+ * - inferred: derived/heuristic (e.g. network access parsed from a bash command)
+ * - observed: observed independently of OpenCode (capsule: process tree, FS watcher, proxy)
  */
 export const CONFIDENCES = ["hook", "inferred", "observed"] as const
 export type Confidence = (typeof CONFIDENCES)[number]
 
-/** Wer hat den Eintrag geschrieben? */
+/** Who wrote the entry? */
 export const SOURCES = ["plugin", "capsule"] as const
 export type Source = (typeof SOURCES)[number]
 
 interface BaseEvent {
-  /** Schema-Version */
+  /** Schema version */
   v: typeof SCHEMA_VERSION
-  /** ISO-8601-Zeitstempel */
+  /** ISO 8601 timestamp */
   ts: string
-  /** OpenCode-Session-ID */
+  /** OpenCode session ID */
   sessionID: string
-  /** Optional: Capsule-Lauf, zu dem der Eintrag gehört */
+  /** Optional: capsule run the entry belongs to */
   runID?: string
   source: Source
   confidence: Confidence
@@ -45,16 +45,16 @@ interface BaseEvent {
 export interface SessionEvent extends BaseEvent {
   kind: "session"
   action: "started" | "idle" | "ended"
-  /** Arbeitsverzeichnis der Session */
+  /** Working directory of the session */
   directory?: string
 }
 
 export interface FileEvent extends BaseEvent {
   kind: "file"
   action: "created" | "edited" | "deleted" | "read"
-  /** Pfad relativ zum Projekt, wenn möglich */
+  /** Path relative to the project, if possible */
   path: string
-  /** Stretch-Goal „Spar-Tipps“: Wurde nur ein Zeilenbereich gelesen? */
+  /** Stretch goal "saving tips": was only a line range read? */
   range?: { offset?: number; limit?: number }
 }
 
@@ -67,18 +67,18 @@ export interface CommandEvent extends BaseEvent {
 
 export interface NetworkEvent extends BaseEvent {
   kind: "network"
-  /** Host oder URL */
+  /** Host or URL */
   target: string
-  /** Wie wurde der Zugriff erkannt? */
+  /** How was the access detected? */
   via: "bash-heuristic" | "proxy"
-  /** Auslösender Befehl bei heuristischer Erkennung */
+  /** Triggering command for heuristic detection */
   command?: string
 }
 
 export type FootprintEvent = SessionEvent | FileEvent | CommandEvent | NetworkEvent
 export type FootprintKind = FootprintEvent["kind"]
 
-/** Payload ohne die von `createEvent` gesetzten Metadaten. */
+/** Payload without the metadata set by `createEvent`. */
 export type EventInput = FootprintEvent extends infer E
   ? E extends FootprintEvent
     ? Omit<E, "v" | "ts">
@@ -89,7 +89,7 @@ export function createEvent(input: EventInput, now: Date = new Date()): Footprin
   return { v: SCHEMA_VERSION, ts: now.toISOString(), ...input } as FootprintEvent
 }
 
-/** Eine JSONL-Zeile (inkl. abschließendem Zeilenumbruch). */
+/** One JSONL line (including the trailing newline). */
 export function serialize(event: FootprintEvent): string {
   return `${JSON.stringify(event)}\n`
 }
@@ -111,8 +111,8 @@ export function isFootprintEvent(value: unknown): value is FootprintEvent {
 }
 
 /**
- * Liest eine JSONL-Zeile. Kaputte oder unbekannte Zeilen werden ignoriert (undefined),
- * damit ein abgebrochener Schreibvorgang nicht den ganzen Report unbrauchbar macht.
+ * Parses one JSONL line. Broken or unknown lines are ignored (undefined)
+ * so that an interrupted write cannot make the whole report unusable.
  */
 export function parseLine(line: string): FootprintEvent | undefined {
   const trimmed = line.trim()

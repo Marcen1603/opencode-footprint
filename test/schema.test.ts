@@ -10,24 +10,24 @@ const input = {
 } as const
 
 describe("schema", () => {
-  test("createEvent setzt Version und Zeitstempel", () => {
+  test("createEvent sets version and timestamp", () => {
     const e = createEvent(input, new Date("2026-01-01T00:00:00Z"))
     expect(e.v).toBe(SCHEMA_VERSION)
     expect(e.ts).toBe("2026-01-01T00:00:00.000Z")
   })
 
-  test("serialize → parseLine ist verlustfrei", () => {
+  test("serialize → parseLine is lossless", () => {
     const e = createEvent(input)
     const line = serialize(e)
     expect(line.endsWith("\n")).toBe(true)
     expect(parseLine(line)).toEqual(e)
   })
 
-  test("kaputte und unbekannte Zeilen werden übersprungen", () => {
+  test("broken and unknown lines are skipped", () => {
     const good = serialize(createEvent(input))
     const content = [
       good,
-      "{nicht json",
+      "{not json",
       JSON.stringify({ v: 99, kind: "file" }),
       JSON.stringify({ ...createEvent(input), confidence: "guess" }),
       "",

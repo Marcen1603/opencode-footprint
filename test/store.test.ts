@@ -15,7 +15,7 @@ afterEach(async () => {
 })
 
 describe("store", () => {
-  test("appendEvent schreibt pro Session eine Datei", async () => {
+  test("appendEvent writes one file per session", async () => {
     const base = { source: "plugin", confidence: "hook" } as const
     await appendEvent(
       dir,
@@ -34,12 +34,12 @@ describe("store", () => {
     expect((await listSessions(dir)).sort()).toEqual(["a", "b"])
   })
 
-  test("fehlende Daten liefern leere Ergebnisse", async () => {
+  test("missing data yields empty results", async () => {
     expect(await listSessions(dir)).toEqual([])
     expect(await readSession(dir, "nope")).toEqual([])
   })
 
-  test("safeId verhindert Pfad-Traversal", () => {
+  test("safeId prevents path traversal", () => {
     expect(safeId("../../etc/passwd")).toBe("______etc_passwd")
     expect(() => safeId("")).toThrow()
   })

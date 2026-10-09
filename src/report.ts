@@ -1,4 +1,4 @@
-/** Aggregation von Footprint-Events zu einem lesbaren Report (von CLI und TUI genutzt). */
+/** Aggregates footprint events into a readable report (used by the CLI and the TUI). */
 import type { FootprintEvent, FootprintKind } from "./schema.js"
 
 export function summarize(events: readonly FootprintEvent[]): Record<FootprintKind, number> {

@@ -1,24 +1,24 @@
 #!/usr/bin/env node
 /**
- * CLI: nachträglicher Report für vergangene Sessions.
- * Später zusätzlich `run`: startet OpenCode als Kindprozess und beobachtet unabhängig (Capsule).
+ * CLI: after-the-fact report for past sessions.
+ * Later also `run`: starts OpenCode as a child process and observes it independently (capsule).
  */
 import { readFileSync } from "node:fs"
 import { parseArgs } from "node:util"
 import { summarize } from "./report.js"
 import { listSessions, readSession } from "./store.js"
 
-const HELP = `opencode-footprint – was hat der Agent in dieser Session gemacht?
+const HELP = `opencode-footprint – what did the agent actually do in this session?
 
 Usage:
-  opencode-footprint sessions              Sessions im aktuellen Projekt auflisten
-  opencode-footprint report [session-id]   Report einer Session (Standard: neueste)
-  opencode-footprint run [-- opencode-args] OpenCode mit unabhängiger Beobachtung starten (geplant)
+  opencode-footprint sessions               List the sessions in the current project
+  opencode-footprint report [session-id]    Report for one session (default: most recent)
+  opencode-footprint run [-- opencode-args] Start OpenCode with independent observation (planned)
 
 Options:
-  -C, --dir <path>   Projektverzeichnis (Standard: aktuelles Verzeichnis)
-  -h, --help         Hilfe anzeigen
-  -v, --version      Version anzeigen
+  -C, --dir <path>   Project directory (default: current directory)
+  -h, --help         Show help
+  -v, --version      Show version
 `
 
 function version(): string {
@@ -52,7 +52,7 @@ async function main(argv: string[]): Promise<number> {
   switch (command) {
     case "sessions": {
       const sessions = await listSessions(dir)
-      if (sessions.length === 0) console.log("Keine Footprints gefunden.")
+      if (sessions.length === 0) console.log("No footprints found.")
       for (const id of sessions) console.log(id)
       return 0
     }
@@ -60,22 +60,22 @@ async function main(argv: string[]): Promise<number> {
       const sessions = await listSessions(dir)
       const id = rest[0] ?? sessions.at(-1)
       if (id === undefined) {
-        console.error("Keine Footprints gefunden.")
+        console.error("No footprints found.")
         return 1
       }
       const counts = summarize(await readSession(dir, id))
       console.log(`Session ${id}`)
-      console.log(`  Dateien:   ${counts.file}`)
-      console.log(`  Befehle:   ${counts.command}`)
-      console.log(`  Netzwerk:  ${counts.network}`)
-      // TODO(v1): lesbare Zusammenfassung statt Zähler
+      console.log(`  Files:     ${counts.file}`)
+      console.log(`  Commands:  ${counts.command}`)
+      console.log(`  Network:   ${counts.network}`)
+      // TODO(v1): readable summary instead of counters
       return 0
     }
     case "run":
-      console.error("`run` (Capsule-Edition) ist noch nicht implementiert.")
+      console.error("`run` (capsule edition) is not implemented yet.")
       return 2
     default:
-      console.error(`Unbekannter Befehl: ${command}\n\n${HELP}`)
+      console.error(`Unknown command: ${command}\n\n${HELP}`)
       return 1
   }
 }
