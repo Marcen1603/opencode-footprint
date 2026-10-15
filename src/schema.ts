@@ -3,12 +3,12 @@
  *
  * This file is the contract between all writers (server plugin, later the capsule wrapper)
  * and all readers (TUI, CLI report). Every change here is a format change:
- * bump SCHEMA_VERSION on incompatible changes.
+ * bump SCHEMA_VERSION on incompatible changes. 0.x means the format may still change.
  *
  * Deliberately free of runtime dependencies (no zod or similar) to keep the CLI and wrapper lean.
  */
 
-export const SCHEMA_VERSION = 1 as const
+export const SCHEMA_VERSION = "0.1" as const
 
 /**
  * Set by the capsule wrapper when it starts OpenCode; the plugin reads it
@@ -17,12 +17,12 @@ export const SCHEMA_VERSION = 1 as const
 export const RUN_ID_ENV = "OPENCODE_FOOTPRINT_RUN_ID"
 
 /**
- * How reliable is an entry?
- * - hook:     reported directly by an OpenCode hook/event
- * - inferred: derived/heuristic (e.g. network access parsed from a bash command)
- * - observed: observed independently of OpenCode (capsule: process tree, FS watcher, proxy)
+ * How far can you trust an entry? Ordered from weakest to strongest.
+ * - guessed:  derived/heuristic (e.g. network access parsed from a bash command)
+ * - reported: reported directly by OpenCode (hook/event)
+ * - verified: confirmed independently of OpenCode (capsule: process tree, FS watcher, proxy)
  */
-export const CONFIDENCES = ["hook", "inferred", "observed"] as const
+export const CONFIDENCES = ["guessed", "reported", "verified"] as const
 export type Confidence = (typeof CONFIDENCES)[number]
 
 /** Who wrote the entry? */

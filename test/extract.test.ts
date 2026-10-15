@@ -6,7 +6,7 @@ const directory = join("/work", "project")
 const base = { sessionID: "ses_1", directory }
 
 describe("extractToolEvents", () => {
-  test("bash yields a command and inferred network events", () => {
+  test("bash yields a command and guessed network events", () => {
     const events = extractToolEvents({
       ...base,
       tool: "bash",
@@ -16,13 +16,13 @@ describe("extractToolEvents", () => {
     expect(events[0]).toMatchObject({
       kind: "command",
       command: "curl https://example.com/x",
-      confidence: "hook",
+      confidence: "reported",
     })
     expect(events[1]).toMatchObject({
       kind: "network",
       target: "example.com",
       via: "bash-heuristic",
-      confidence: "inferred",
+      confidence: "guessed",
     })
   })
 
@@ -84,7 +84,7 @@ describe("extractToolEvents", () => {
       kind: "network",
       target: "docs.example.com",
       via: "tool",
-      confidence: "hook",
+      confidence: "reported",
     })
   })
 
@@ -124,7 +124,7 @@ describe("extractToolEvents", () => {
       kind: "tool",
       name: "grep",
       category: "builtin",
-      confidence: "hook",
+      confidence: "reported",
     })
     expect(JSON.stringify(event)).not.toContain("secret-token")
   })

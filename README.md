@@ -22,13 +22,13 @@ Agents edit files, run shell commands and reach the network while you look elsew
 
 | | What | How reliable |
 |---|---|---|
-| 📄 **Files** | read, created, edited, deleted | `hook` |
-| ⌨️ **Commands** | shell commands the agent ran | `hook` |
-| 🌐 **Network** | hosts and registries a command likely contacts | `inferred` |
-| 🧰 **Tools** | name of every other tool used, e.g. an MCP tool | `hook` |
-| 🕐 **Sessions** | started (idle, when OpenCode reports it) | `hook` |
+| 📄 **Files** | read, created, edited, deleted | `reported` |
+| ⌨️ **Commands** | shell commands the agent ran | `reported` |
+| 🌐 **Network** | hosts and registries a command likely contacts | `guessed` |
+| 🧰 **Tools** | name of every other tool used, e.g. an MCP tool | `reported` |
+| 🕐 **Sessions** | started (idle, when OpenCode reports it) | `reported` |
 
-Every entry carries a confidence level: **`hook`** reported by OpenCode · **`inferred`** derived from a command, so a hint and not proof · **`observed`** seen independently of OpenCode (reserved for a future wrapper mode).
+Every entry carries a confidence level: **`guessed`** derived from a command, so a hint and not proof · **`reported`** reported by OpenCode itself · **`verified`** confirmed independently of OpenCode (reserved for a future wrapper mode).
 
 ## Quick start
 

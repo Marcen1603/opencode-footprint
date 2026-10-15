@@ -4,7 +4,7 @@ import type { EventInput } from "../src/schema.js"
 import { createEvent } from "../src/schema.js"
 import { sidebarLines } from "../src/sidebar.js"
 
-const base = { sessionID: "s1", source: "plugin", confidence: "hook" } as const
+const base = { sessionID: "s1", source: "plugin", confidence: "reported" } as const
 
 function report(inputs: EventInput[]) {
   return buildReport(
@@ -29,7 +29,7 @@ describe("sidebarLines", () => {
         { ...base, kind: "command", command: "curl https://example.com" },
         {
           ...base,
-          confidence: "inferred",
+          confidence: "guessed",
           kind: "network",
           target: "example.com",
           via: "bash-heuristic",
@@ -41,7 +41,7 @@ describe("sidebarLines", () => {
     expect(lines).toContain("1 command · 1 network")
     expect(lines).toContain("  hello.txt")
     expect(lines).toContain("  $ curl https://example.com")
-    expect(lines).toContain("Network (hints)")
+    expect(lines).toContain("Network (guessed)")
     expect(lines).toContain("  example.com")
     expect(lines).toContain("  grep")
   })

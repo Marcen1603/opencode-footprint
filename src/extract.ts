@@ -59,7 +59,7 @@ export function extractToolEvents(call: ToolCall): EventInput[] {
       const events: EventInput[] = [
         {
           ...base,
-          confidence: "hook",
+          confidence: "reported",
           kind: "command",
           command: redactCommand(command),
           ...(cwd ? { cwd } : {}),
@@ -68,7 +68,7 @@ export function extractToolEvents(call: ToolCall): EventInput[] {
       for (const target of detectNetwork(command)) {
         events.push({
           ...base,
-          confidence: "inferred",
+          confidence: "guessed",
           kind: "network",
           target,
           via: "bash-heuristic",
@@ -89,7 +89,7 @@ export function extractToolEvents(call: ToolCall): EventInput[] {
       return [
         {
           ...base,
-          confidence: "hook",
+          confidence: "reported",
           kind: "file",
           action: "read",
           path: displayPath(call.directory, path),
@@ -110,7 +110,7 @@ export function extractToolEvents(call: ToolCall): EventInput[] {
     case "patch":
       return patchEvents(call, base, text(input.patchText) ?? text(input.patch))
     case "websearch":
-      return [{ ...base, confidence: "hook", kind: "network", target: "web search", via: "tool" }]
+      return [{ ...base, confidence: "reported", kind: "network", target: "web search", via: "tool" }]
     case "webfetch": {
       const url = text(input.url)
       if (url === undefined) return []
@@ -120,7 +120,7 @@ export function extractToolEvents(call: ToolCall): EventInput[] {
       } catch {
         // keep the raw value
       }
-      return [{ ...base, confidence: "hook", kind: "network", target, via: "tool" }]
+      return [{ ...base, confidence: "reported", kind: "network", target, via: "tool" }]
     }
     default:
       return toolEvent(call.tool, base)
@@ -139,7 +139,7 @@ function toolEvent(
   return [
     {
       ...base,
-      confidence: "hook",
+      confidence: "reported",
       kind: "tool",
       name: name.slice(0, MAX_TOOL_NAME),
       category: OTHER_BUILTIN_TOOLS.has(name.toLowerCase()) ? "builtin" : "external",
@@ -155,7 +155,7 @@ function fileEvent(
 ): EventInput[] {
   if (path === undefined) return []
   return [
-    { ...base, confidence: "hook", kind: "file", action, path: displayPath(call.directory, path) },
+    { ...base, confidence: "reported", kind: "file", action, path: displayPath(call.directory, path) },
   ]
 }
 
@@ -177,7 +177,7 @@ function patchEvents(
     if (path === undefined) continue
     events.push({
       ...base,
-      confidence: "hook",
+      confidence: "reported",
       kind: "file",
       action: actions[kind],
       path: displayPath(call.directory, path),
@@ -188,7 +188,7 @@ function patchEvents(
     if (path === undefined) continue
     events.push({
       ...base,
-      confidence: "hook",
+      confidence: "reported",
       kind: "file",
       action: "edited",
       path: displayPath(call.directory, path),

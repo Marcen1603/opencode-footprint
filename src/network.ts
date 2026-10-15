@@ -3,7 +3,7 @@
  *
  * OpenCode reports no network events, so this is a heuristic: it only looks at the command text.
  * It misses anything a script does internally and may flag commands that never reach the network.
- * Entries derived from it must carry `confidence: "inferred"`.
+ * Entries derived from it must carry `confidence: "guessed"`.
  */
 
 /** Splits a command line into simple commands (`&&`, `||`, `;`, `|`, newlines). */

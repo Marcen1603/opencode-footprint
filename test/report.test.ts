@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { buildReport, formatDuration, renderReport } from "../src/report.js"
 import { createEvent, type EventInput } from "../src/schema.js"
 
-const base = { sessionID: "s1", source: "plugin", confidence: "hook" } as const
+const base = { sessionID: "s1", source: "plugin", confidence: "reported" } as const
 
 type Payload = EventInput extends infer E
   ? E extends EventInput
@@ -32,7 +32,7 @@ const events = [
       via: "bash-heuristic",
       command: "curl https://example.com",
     }),
-    confidence: "inferred" as const,
+    confidence: "guessed" as const,
   },
   at(14, { kind: "tool", name: "grep", category: "builtin" }),
   at(15, { kind: "tool", name: "grep", category: "builtin" }),
@@ -71,7 +71,7 @@ describe("buildReport", () => {
 })
 
 describe("renderReport", () => {
-  test("renders sections, failed commands and inferred hints", () => {
+  test("renders sections, failed commands and guessed hints", () => {
     const out = renderReport(buildReport("s1", events))
     expect(out).toContain("Session s1")
     expect(out).toContain("active 1m 15s")
@@ -79,7 +79,7 @@ describe("renderReport", () => {
     expect(out).toContain("src/a.ts  (edited, read ×2)")
     expect(out).toContain("Commands (1 failed)")
     expect(out).toContain("$ bun test --bail  [exit 1]")
-    expect(out).toContain("example.com  [inferred]")
+    expect(out).toContain("example.com  [guessed]")
     expect(out).toContain("grep ×2")
   })
 

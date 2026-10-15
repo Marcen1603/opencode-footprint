@@ -16,7 +16,7 @@ afterEach(async () => {
 
 describe("store", () => {
   test("appendEvent writes one file per session", async () => {
-    const base = { source: "plugin", confidence: "hook" } as const
+    const base = { source: "plugin", confidence: "reported" } as const
     await appendEvent(
       dir,
       createEvent({ ...base, kind: "session", action: "started", sessionID: "a" }),

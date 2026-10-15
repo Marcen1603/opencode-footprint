@@ -1,6 +1,6 @@
 {
   "name": "opencode-footprint",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A lightweight, readable footprint of what your OpenCode agent actually did — files touched, commands run, network access.",
   "license": "MIT",
   "author": "Marcen1603",

@@ -257,13 +257,13 @@ export function renderReport(report: Report, options: RenderOptions = {}): strin
       limit,
     ),
     ...section(
-      report.network.some((n) => n.confidence === "inferred")
-        ? "Network (inferred entries are hints from commands, not proof)"
+      report.network.some((n) => n.confidence === "guessed")
+        ? "Network (guessed entries are hints from commands, not proof)"
         : "Network",
       report.network,
       (n) => {
         const times = n.count > 1 ? ` ×${n.count}` : ""
-        const tag = n.confidence === "hook" ? "" : `  [${n.confidence}]`
+        const tag = n.confidence === "reported" ? "" : `  [${n.confidence}]`
         return `${n.target}${times}${tag}`
       },
       limit,

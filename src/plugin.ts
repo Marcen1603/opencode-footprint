@@ -69,7 +69,7 @@ export default Plugin.define({
               sessionID: event.data.sessionID,
               directory,
               source: "plugin",
-              confidence: "hook",
+              confidence: "reported",
             })
             break
           case "session.idle":
@@ -78,7 +78,7 @@ export default Plugin.define({
               action: "idle",
               sessionID: event.data.sessionID,
               source: "plugin",
-              confidence: "hook",
+              confidence: "reported",
             })
             break
         }

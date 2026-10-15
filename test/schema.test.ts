@@ -6,7 +6,7 @@ const input = {
   command: "curl https://example.com",
   sessionID: "ses_1",
   source: "plugin",
-  confidence: "hook",
+  confidence: "reported",
 } as const
 
 describe("schema", () => {
@@ -45,7 +45,7 @@ describe("tool events", () => {
       category: "external",
       sessionID: "ses_1",
       source: "plugin",
-      confidence: "hook",
+      confidence: "reported",
     })
     expect(parseLine(serialize(e))).toEqual(e)
   })

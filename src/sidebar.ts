@@ -71,7 +71,7 @@ export function sidebarLines(report: Report, options: SidebarOptions = {}): Side
   }
 
   if (report.network.length > 0) {
-    const hint = report.network.some((n) => n.confidence === "inferred") ? " (hints)" : ""
+    const hint = report.network.some((n) => n.confidence === "guessed") ? " (guessed)" : ""
     lines.push({ text: `Network${hint}`, muted: true })
     for (const n of report.network.slice(0, limit)) {
       lines.push({
