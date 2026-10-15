@@ -5,7 +5,7 @@
  */
 import { readFileSync } from "node:fs"
 import { parseArgs } from "node:util"
-import { summarize } from "./report.js"
+import { buildReport, renderReport } from "./report.js"
 import { listSessions, readSession } from "./store.js"
 
 const HELP = `opencode-footprint – what did the agent actually do in this session?
@@ -17,6 +17,8 @@ Usage:
 
 Options:
   -C, --dir <path>   Project directory (default: current directory)
+      --all          Report: list every entry instead of the first 15 per section
+      --json         Report: machine-readable output
   -h, --help         Show help
   -v, --version      Show version
 `
@@ -32,6 +34,8 @@ async function main(argv: string[]): Promise<number> {
     allowPositionals: true,
     options: {
       dir: { type: "string", short: "C" },
+      all: { type: "boolean" },
+      json: { type: "boolean" },
       help: { type: "boolean", short: "h" },
       version: { type: "boolean", short: "v" },
     },
@@ -63,13 +67,9 @@ async function main(argv: string[]): Promise<number> {
         console.error("No footprints found.")
         return 1
       }
-      const counts = summarize(await readSession(dir, id))
-      console.log(`Session ${id}`)
-      console.log(`  Files:     ${counts.file}`)
-      console.log(`  Commands:  ${counts.command}`)
-      console.log(`  Network:   ${counts.network}`)
-      console.log(`  Tools:     ${counts.tool}`)
-      // TODO(v1): readable summary instead of counters
+      const report = buildReport(id, await readSession(dir, id))
+      if (values.json) console.log(JSON.stringify(report, null, 2))
+      else process.stdout.write(renderReport(report, { all: values.all === true }))
       return 0
     }
     case "run":
