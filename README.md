@@ -26,7 +26,7 @@ Agents edit files, run shell commands and reach the network while you look elsew
 | ⌨️ **Commands** | shell commands the agent ran | `hook` |
 | 🌐 **Network** | hosts and registries a command likely contacts | `inferred` |
 | 🧰 **Tools** | name of every other tool used, e.g. an MCP tool | `hook` |
-| 🕐 **Sessions** | started, idle | `hook` |
+| 🕐 **Sessions** | started (idle, when OpenCode reports it) | `hook` |
 
 Every entry carries a confidence level: **`hook`** reported by OpenCode · **`inferred`** derived from a command, so a hint and not proof · **`observed`** seen independently of OpenCode (reserved for a future wrapper mode).
 
@@ -41,7 +41,7 @@ After a session:
 
 ```sh
 npx opencode-footprint sessions            # list sessions of this project
-npx opencode-footprint report [session-id] # summary, defaults to the latest
+npx opencode-footprint report [session-id] # summary, defaults to the latest (--all, --json)
 ```
 
 Needs **OpenCode V2** (developed against plugin SDK 2.0.26). V1 is not supported. Footprints are written to `.opencode/footprint/`, so add that folder to your `.gitignore`.
@@ -53,7 +53,7 @@ flowchart LR
   A[OpenCode V2] -->|tool hooks and events| B[Server plugin]
   B -->|append| C[(JSONL file per session)]
   C --> D[CLI report]
-  C --> E["TUI sidebar (planned)"]
+  C --> E[TUI sidebar]
 ```
 
 One package, three entry points:
@@ -61,7 +61,7 @@ One package, three entry points:
 | Entry point | Role |
 |---|---|
 | `opencode-footprint` | Server plugin, writes the footprint |
-| `opencode-footprint/tui` | TUI plugin, live sidebar (planned) |
+| `opencode-footprint/tui` | TUI plugin, live sidebar (shipped as source) |
 | `opencode-footprint` (CLI) | Reports for past sessions |
 
 ## Privacy
@@ -74,9 +74,11 @@ One package, three entry points:
 
 - [x] Event schema and JSONL store
 - [x] Capture files, commands, network hints and tool names
-- [ ] Readable report instead of counters
+- [x] Readable report instead of counters
+- [x] Live TUI sidebar (first version, polls the session file)
 - [ ] Exit codes of commands
-- [ ] Live TUI sidebar
+- [ ] Long commands wrapped in the sidebar instead of cut off
+- [ ] `report --full` for untruncated commands
 - [ ] Optional wrapper mode that observes OpenCode independently
 
 ## Try it locally
@@ -110,12 +112,28 @@ Set a context length of 16k-32k in the Ollama settings. To keep models off your 
 bun install && bun run build
 ```
 
-```jsonc
-// opencode.json of the project you test in
-{ "plugins": ["file:///path/to/opencode-footprint"] }
+OpenCode finds a plugin given as a path only if the folder directly contains `index.ts` (server) and `tui.tsx` (TUI). It does not read this package's `exports`. So load it through a small plugin folder that re-exports the build. Create these two files in `plugins/footprint/` inside your global OpenCode config folder (`opencode debug paths config` prints it, for example `~/.config/opencode`), or in `.opencode/plugins/footprint/` of a single project. No `opencode.json` entry is needed, auto-discovery picks them up.
+
+```ts
+// plugins/footprint/index.ts
+export { default } from "/path/to/opencode-footprint/dist/plugin.js"
 ```
 
-Start `opencode` there and give the agent a small task, for example: *create hello.txt and run `curl https://example.com`*.
+```tsx
+// plugins/footprint/tui.tsx
+export { default } from "/path/to/opencode-footprint/src/tui.tsx"
+```
+
+Use an absolute path to your clone, on Windows with forward slashes (`C:/Users/you/opencode-footprint/...`). Restart OpenCode and check that it was loaded:
+
+```sh
+opencode --version        # should print 2.x
+opencode plugin list      # opencode-footprint should appear
+```
+
+The plugin also shows up in OpenCode under Ctrl+P → Plugins, once as server and once as TUI plugin. Start `opencode` in a project and give the agent a small task, for example: *create hello.txt and run `curl https://example.com`*. The sidebar shows a "Footprint" block.
+
+Footprints are written to `.opencode/footprint/` of the folder you start `opencode` in, so a throwaway test folder gets its own `.opencode/`. Rebuild with `bun run build` after changing the server plugin.
 
 **4. Look at the result.**
 
@@ -152,7 +170,8 @@ src/
   network.ts  best-effort network detection and credential masking
   report.ts   aggregation for CLI and TUI
   plugin.ts   server plugin (writer)
-  tui.ts      TUI plugin (reader)
+  sidebar.ts  compact sidebar text from a report (pure, tested)
+  tui.tsx     TUI plugin (reader), OpenTUI/Solid JSX
   cli.ts      CLI (reader)
 ```
 
