@@ -39,6 +39,24 @@ const events = [
   at(75, { kind: "session", action: "idle" }),
 ]
 
+describe("file state", () => {
+  const stateOf = (actions: Array<"created" | "edited" | "deleted" | "read">) =>
+    buildReport(
+      "s1",
+      actions.map((action, i) => at(i, { kind: "file", action, path: "f.ts" })),
+    ).files[0]?.state
+
+  test("takes the outcome of the last meaningful action", () => {
+    expect(stateOf(["read"])).toBe("read")
+    expect(stateOf(["read", "edited"])).toBe("edited")
+    expect(stateOf(["edited", "read"])).toBe("edited")
+    expect(stateOf(["created", "edited", "read"])).toBe("created")
+    expect(stateOf(["edited", "deleted"])).toBe("deleted")
+    expect(stateOf(["created", "deleted"])).toBe("deleted")
+    expect(stateOf(["deleted", "created"])).toBe("edited")
+  })
+})
+
 describe("buildReport", () => {
   const report = buildReport("s1", events)
 

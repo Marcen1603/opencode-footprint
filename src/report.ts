@@ -35,6 +35,12 @@ export interface FileEntry {
   rangedReads: number
   /** True if the file was created, edited or deleted (not just read). */
   changed: boolean
+  /**
+   * What happened to the file in the end, assuming events arrive in order: deleted wins over
+   * created, created over edited, edited over read. Created and then edited stays "created";
+   * deleted and then created again counts as "edited" (the file existed before).
+   */
+  state: FileAction
 }
 
 export interface CommandEntry {
@@ -73,6 +79,20 @@ export interface Report {
   tools: ToolEntry[]
 }
 
+function nextFileState(current: FileAction, action: FileAction): FileAction {
+  switch (action) {
+    case "deleted":
+      return "deleted"
+    case "created":
+      // Created again after a delete: the file existed before this session.
+      return current === "deleted" ? "edited" : "created"
+    case "edited":
+      return current === "created" ? "created" : "edited"
+    case "read":
+      return current
+  }
+}
+
 export function buildReport(sessionID: string, events: readonly FootprintEvent[]): Report {
   const files = new Map<string, FileEntry>()
   const network = new Map<string, NetworkEntry>()
@@ -96,8 +116,10 @@ export function buildReport(sessionID: string, events: readonly FootprintEvent[]
           actions: {},
           rangedReads: 0,
           changed: false,
+          state: e.action,
         }
         entry.actions[e.action] = (entry.actions[e.action] ?? 0) + 1
+        entry.state = nextFileState(entry.state, e.action)
         if (e.action === "read" && e.range !== undefined) entry.rangedReads++
         if (e.action !== "read") entry.changed = true
         files.set(e.path, entry)

@@ -2,26 +2,40 @@
  * Compact, sidebar-sized view of a footprint report.
  *
  * Pure text (no OpenTUI imports) so it can be unit-tested; `tui.tsx` only turns the lines into
- * elements. Differs from `renderReport` in being short: a sidebar is ~40 columns wide and shares
- * the screen with the conversation.
+ * elements. A sidebar is ~40 columns wide and shares the screen with the conversation, so it only
+ * shows what is worth a glance: files (with a marker per outcome), anything that left the machine
+ * (network, external tools) and failures. Everything else is a number; the full list is in
+ * `opencode-footprint report`.
+ *
+ * File markers:  + created   ~ edited   - deleted   · only read
  */
-import type { Report } from "./report.js"
+import type { FileEntry, Report } from "./report.js"
 
 export interface SidebarLine {
   text: string
-  /** Section headings and hints are drawn in the muted theme color. */
+  /** Section headings, hints and read-only files are drawn in the muted theme color. */
   muted?: boolean
 }
 
 export interface SidebarOptions {
   /** Max visible characters per line. Default 36. */
   width?: number
-  /** Max entries per section (most recent first for commands). Default 4. */
+  /** Max entries per section. Default 5. */
   limit?: number
 }
 
 const DEFAULT_WIDTH = 36
-const DEFAULT_LIMIT = 4
+const DEFAULT_LIMIT = 5
+
+const MARKER: Record<FileEntry["state"], string> = {
+  created: "+",
+  edited: "~",
+  deleted: "-",
+  read: "·",
+}
+
+/** Heaviest first, so the limit cuts read-only files before anything that changed. */
+const STATE_ORDER: FileEntry["state"][] = ["deleted", "created", "edited", "read"]
 
 function clip(value: string, width: number): string {
   const flat = value.replace(/\s+/g, " ").trim()
@@ -37,8 +51,6 @@ export function sidebarLines(report: Report, options: SidebarOptions = {}): Side
   const limit = options.limit ?? DEFAULT_LIMIT
   const lines: SidebarLine[] = [{ text: "Footprint", muted: true }]
 
-  const changed = report.files.filter((f) => f.changed)
-  const readOnly = report.files.filter((f) => !f.changed)
   const recorded =
     report.counts.file + report.counts.command + report.counts.network + report.counts.tool
 
@@ -47,27 +59,37 @@ export function sidebarLines(report: Report, options: SidebarOptions = {}): Side
     return lines
   }
 
-  lines.push(
-    { text: `${plural(changed.length, "file")} changed · ${readOnly.length} read` },
-    { text: `${plural(report.commands.length, "command")} · ${report.network.length} network` },
-  )
+  const failed = report.commands.filter((c) => c.exitCode !== undefined && c.exitCode !== 0)
+  const failedNote = failed.length > 0 ? ` (${failed.length} failed)` : ""
+  lines.push({
+    text: `${plural(report.files.length, "file")} · ${plural(report.commands.length, "command")}${failedNote}`,
+  })
 
   const more = (shown: number, total: number): SidebarLine[] =>
     total > shown ? [{ text: `  … ${total - shown} more`, muted: true }] : []
 
-  if (changed.length > 0) {
-    lines.push({ text: "Changed", muted: true })
-    for (const f of changed.slice(0, limit)) lines.push({ text: `  ${clip(f.path, width - 2)}` })
-    lines.push(...more(limit, changed.length))
-  }
+  if (report.files.length > 0) {
+    const files = [...report.files].sort(
+      (a, b) =>
+        STATE_ORDER.indexOf(a.state) - STATE_ORDER.indexOf(b.state) || a.path.localeCompare(b.path),
+    )
 
-  if (report.commands.length > 0) {
-    lines.push({ text: "Commands (latest)", muted: true })
-    for (const c of report.commands.slice(-limit).reverse()) {
-      const status = c.exitCode !== undefined && c.exitCode !== 0 ? ` [exit ${c.exitCode}]` : ""
-      lines.push({ text: `  $ ${clip(c.command, width - 4 - status.length)}${status}` })
+    // Once the list is cut off, the per-outcome numbers are the only way to see what is hidden.
+    if (files.length > limit) {
+      const parts = STATE_ORDER.flatMap((state) => {
+        const n = files.filter((f) => f.state === state).length
+        return n > 0 ? [`${n} ${state}`] : []
+      })
+      lines.push({ text: parts.join(" · "), muted: true })
     }
-    lines.push(...more(limit, report.commands.length))
+
+    lines.push({ text: "Files", muted: true })
+    for (const f of files.slice(0, limit)) {
+      const line: SidebarLine = { text: `  ${MARKER[f.state]} ${clip(f.path, width - 4)}` }
+      if (f.state === "read") line.muted = true
+      lines.push(line)
+    }
+    lines.push(...more(limit, files.length))
   }
 
   if (report.network.length > 0) {
@@ -81,12 +103,29 @@ export function sidebarLines(report: Report, options: SidebarOptions = {}): Side
     lines.push(...more(limit, report.network.length))
   }
 
-  if (report.tools.length > 0) {
-    const names = report.tools.map((t) => (t.count > 1 ? `${t.name} ×${t.count}` : t.name))
-    lines.push(
-      { text: "Other tools", muted: true },
-      { text: `  ${clip(names.join(", "), width - 2)}` },
-    )
+  // Built-in tools (grep, glob, …) say little; external (MCP) tools reach beyond the machine.
+  const external = report.tools.filter((t) => t.category === "external")
+  if (external.length > 0) {
+    lines.push({ text: "External tools", muted: true })
+    for (const t of external.slice(0, limit)) {
+      lines.push({ text: `  ${clip(t.count > 1 ? `${t.name} ×${t.count}` : t.name, width - 2)}` })
+    }
+    lines.push(...more(limit, external.length))
+  }
+
+  if (failed.length > 0) {
+    lines.push({ text: "Failed", muted: true })
+    for (const c of failed.slice(-limit).reverse()) {
+      const status = ` [exit ${c.exitCode}]`
+      lines.push({ text: `  $ ${clip(c.command, width - 4 - status.length)}${status}` })
+    }
+    lines.push(...more(limit, failed.length))
+  }
+
+  // Live glance at what the agent is doing; skipped when the last command already shows as failed.
+  const last = report.commands.at(-1)
+  if (last !== undefined && (last.exitCode === undefined || last.exitCode === 0)) {
+    lines.push({ text: `Last: $ ${clip(last.command, width - 8)}`, muted: true })
   }
 
   return lines.map((l) =>
