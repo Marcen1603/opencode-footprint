@@ -69,7 +69,7 @@
     "@opencode/theme": "2.0.26",
     "@opentui/core": "^0.6.6",
     "@opentui/solid": "^0.6.6",
-    "@types/bun": "1.4.2",
+    "@types/bun": "1.4.4",
     "@types/node": "^26.6.5",
     "solid-js": "^1.9.17",
     "typescript": "^7.0.2"
