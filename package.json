@@ -64,7 +64,7 @@
     "solid-js": ">=1.9.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
+    "@biomejs/biome": "2.6.4",
     "@opencode/plugin": "2.0.26",
     "@opencode/theme": "2.0.26",
     "@opentui/core": "^0.6.6",
